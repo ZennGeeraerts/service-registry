@@ -102,6 +102,8 @@ namespace service_registry
 		template<typename Type>
 		void Unregister()
 		{
+			static_assert(!IsDecorated<Type>(), "Type must be undecorated.");
+
 			std::lock_guard lock{ m_Mutex };
 			auto it = m_ServiceMap.find(typeid(Type));
 			if (it == m_ServiceMap.end())
@@ -113,7 +115,8 @@ namespace service_registry
 		template <typename Type>
 		Type* Get()
 		{
-			// TODO: add type checks
+			static_assert(!IsDecorated<Type>(), "Type must be undecorated.");
+
 			std::lock_guard lock{ m_Mutex };
 			auto it = m_ServiceMap.find(typeid(Type));
 			if (it == m_ServiceMap.end())

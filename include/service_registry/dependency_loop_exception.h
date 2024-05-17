@@ -14,22 +14,20 @@ namespace service_registry
 		}
 
 	private:
-		std::string CreatePathString(const std::vector<std::type_index>& dependencyPath)
+		std::string CreatePathString(const std::vector<std::type_index>& dependencyPath) const
 		{
-			std::stringstream pathStream;
-			for (const auto& dependency : dependencyPath)
+			// Avoid throwing exceptions in an exception
+			// String streams don't throw exceptions by default
+			// bad alloc exception can still be thrown, don't handle this, program should be terminated when this happens
+			std::stringstream pathStream{};
+			for (size_t i{}; i < dependencyPath.size(); ++i)
 			{
-				pathStream << dependency.name();
-				if (dependency != dependencyPath.back())
+				pathStream << dependencyPath[i].name();
+				if (i < dependencyPath.size() - 1)
 					pathStream << ", ";
 			}
 
-			m_PathString = pathStream.str();
-			return m_PathString;
+			return pathStream.str();
 		}
-
-	private:
-		// Store to be accessible for the base class
-		std::string m_PathString;
 	};
 }

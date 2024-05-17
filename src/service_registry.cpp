@@ -45,6 +45,7 @@ namespace service_registry
 			std::vector<std::type_index> dependencyPath{};
 			for (const auto& entry : m_CtorPath)
 				dependencyPath.emplace_back(entry.first);
+			dependencyPath.emplace_back(it->first);
 
 			throw DependencyLoopException{ dependencyPath };
 		}

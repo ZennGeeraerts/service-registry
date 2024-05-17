@@ -1,5 +1,6 @@
 #include <catch/catch.hpp>
 #include <service_registry/service_registry.h>
+#include <iostream>
 
 namespace service_registry
 {
@@ -73,6 +74,51 @@ namespace service_registry
 		}
 	};
 
+	class EngineService final
+	{
+	public:
+		EngineService() = default;
+	};
+
+	class CarService;
+
+	class TireService final
+	{
+	public:
+		TireService(ServiceRegistry& registry)
+		{
+			m_pCarService = registry.Get<CarService>();
+		}
+
+		CarService* m_pCarService;
+	};
+
+	class WheelService final
+	{
+	public:
+		WheelService(ServiceRegistry& registry)
+		{
+			m_pTireService = registry.Get<TireService>();
+		}
+
+	private:
+		TireService* m_pTireService;
+	};
+
+	class CarService final
+	{
+	public:
+		CarService(ServiceRegistry& registry)
+		{
+			m_pEngineService = registry.Get<EngineService>();
+			m_pWheelService = registry.Get<WheelService>();
+		}
+
+	private:
+		EngineService* m_pEngineService;
+		WheelService* m_pWheelService;
+	};
+
 	TEST_CASE("ServiceRegistry")
 	{
 		SECTION("Register")
@@ -125,6 +171,24 @@ namespace service_registry
 			REQUIRE(pFood->Eat() == "Eating pizza");
 		}
 
-		// TODO: Test circular dependencies
+		SECTION("Circular Dependencies")
+		{
+			auto registry = ServiceRegistry{};
+			registry.Register<CarService>();
+			registry.Register<WheelService>();
+			registry.Register<TireService>();
+			registry.Register<EngineService>();
+
+			REQUIRE_THROWS_AS(registry.Get<CarService>(), DependencyLoopException);
+
+			try
+			{
+				registry.Get<CarService>();
+			}
+			catch (const DependencyLoopException& exc)
+			{
+				std::cout << exc.what() << '\n';
+			}
+		}
 	}
 }
